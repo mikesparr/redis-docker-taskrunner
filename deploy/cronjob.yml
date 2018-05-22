@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: task-runner
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: task-runner
+            image: mikesparr/redis-docker-taskrunner
+            env:
+              - name: SCHEDULER_NAME
+                value: scheduler1
+              - name: SCHEDULER_CHANNEL
+                value: scheduler
+              - name: SCHEDULER_DB_HOST
+                value: localhost
+              - name: SCHEDULER_DB_PORT
+                value: "6379"
+              - name: SCHEDULER_DB_NAME
+                value: "0"
+              - name: SCHEDULER_DB_PASS
+                valueFrom:
+                  secretKeyRef:
+                    name: taskrunner-config
+                    key: dbpass
+          restartPolicy: OnFailure
