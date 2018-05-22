@@ -4,5 +4,5 @@ import RedisConfig from "./RedisConfig";
 // import Task
 
 export default interface ITaskRunner {
-    run(): void;
+    run(): Promise<boolean>;
 }

@@ -26,6 +26,13 @@ describe("EnvConfig", () => {
         expect(result.dbPort).toEqual(5555);
         expect(result.dbName).toEqual(0);
         expect(result.dbPass).toBeUndefined();
+
+        expect(result.getSchedulerName()).toEqual("test");
+        expect(result.getChannel()).toEqual("test");
+        expect(result.getDbHost()).toEqual("someserver");
+        expect(result.getDbPort()).toEqual(5555);
+        expect(result.getDbName()).toEqual(0);
+        expect(result.getDbPass()).toBeUndefined();
     });
 
     it("sets config values from env params", () => {
