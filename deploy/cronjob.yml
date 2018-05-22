@@ -20,11 +20,11 @@ spec:
                 value: localhost
               - name: SCHEDULER_DB_PORT
                 value: "6379"
-              - name: SCHEDULER_DB_NAME
-                value: "0"
-              - name: SCHEDULER_DB_PASS
-                valueFrom:
-                  secretKeyRef:
-                    name: taskrunner-config
-                    key: dbpass
+#              - name: SCHEDULER_DB_NAME
+#                value: "0"
+#              - name: SCHEDULER_DB_PASS
+#                valueFrom:
+#                  secretKeyRef:
+#                    name: taskrunner-config
+#                    key: dbpass
           restartPolicy: OnFailure
