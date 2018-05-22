@@ -1,0 +1,56 @@
+{
+  "name": "redis-docker-taskrunner",
+  "version": "0.1.0",
+  "description": "Simple task runner that runs pending tasks in Redis when Docker container starts",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "build": "./node_modules/.bin/tsc",
+    "lint": "./node_modules/.bin/tslint -c tslint.json 'src/**/*.ts'",
+    "test": "./node_modules/.bin/jest",
+    "coverage": "./node_modules/.bin/jest --coverage"
+  },
+  "dependencies": {
+    "@types/redis": "^2.8.6",
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^22.2.3",
+    "jest": "^22.4.4",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "<rootDir>/preprocessor.js"
+    },
+    "testMatch": [
+      "**/__tests__/*.+(ts|tsx|js)"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikesparr/redis-docker-taskrunner.git"
+  },
+  "keywords": [
+    "task",
+    "runner",
+    "scheduler",
+    "jobs",
+    "docker",
+    "redis",
+    "kubernetes",
+    "cron"
+  ],
+  "author": "Mike Sparr <mike@goomzee.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mikesparr/redis-docker-taskrunner/issues"
+  },
+  "homepage": "https://github.com/mikesparr/redis-docker-taskrunner#readme"
+}
