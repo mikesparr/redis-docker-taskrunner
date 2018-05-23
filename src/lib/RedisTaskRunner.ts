@@ -11,6 +11,7 @@ import ITaskRunner from "./ITaskRunner";
 import Job from "./Job";
 import RedisConfig from "./RedisConfig";
 import Run from "./Run";
+import RunReport from "./RunReport";
 import Task from "./Task";
 
 export default class RedisTaskRunner implements ITaskRunner {
@@ -33,7 +34,6 @@ export default class RedisTaskRunner implements ITaskRunner {
         return new Promise((resolve, reject) => {
             this.getPendingJobs()
                 .then((pendingJobs) => {
-                    console.log({pendingJobs});
 
                     // if empty, done
                         // create RunReport
@@ -51,6 +51,10 @@ export default class RedisTaskRunner implements ITaskRunner {
                         // catch
                             // disconnect()
                             // reject(error)
+                        
+                    const taskCount: number = pendingJobs.length || 0;
+                    const runReport: IReport = new RunReport("testRun1", "testJob1", taskCount, Date.now(), true);
+                    resolve(runReport);
                 })
                 .catch((error) => {
                     reject(error); // throw up to caller
@@ -95,25 +99,26 @@ export default class RedisTaskRunner implements ITaskRunner {
         return new Promise((resolve, reject) => {
             const min: number = 0;
             const max: number = Math.floor(Date.now() / 1000);
-            const key: string = [this.channel, "scheduler", "active"].join(":");
+            const key: string = [this.channel, "jobs", "active"].join(":");
 
-            this.client.zrangebyscore(key, min, max, (err: Error, jobs: string[]) => {
+            this.client.zrangebyscore(key, min, max, (err: Error, jobKeys: string[]) => {
                 if (err !== null) {
                     throw new Error("Error fetching jobs from database");
                 }
 
-                const pendingJobs: IJob[] = [];
+                const fetchJobs: Array<Promise<IJob>> = [];
 
-                jobs.map((jobStr: string) => {
-                    try {
-                        const jobDict: {[key: string]: any} = JSON.parse(jobStr);
-                        pendingJobs.push(new Job().fromDict(jobDict));
-                    } catch (error) {
-                        reject(new Error("Error parsing JSON"));
-                    }
+                jobKeys.map((jobKey: string) => {
+                    fetchJobs.push(this.getJob(jobKey));
                 });
 
-                resolve(pendingJobs);
+                Promise.all(fetchJobs)
+                    .then((pendingJobs) => {
+                        resolve(pendingJobs);
+                    })
+                    .catch((error) => {
+                        reject(error);
+                    });
             });
         });
     }
@@ -137,10 +142,29 @@ export default class RedisTaskRunner implements ITaskRunner {
         });
     }
 
+    protected getJob(key: string): Promise<IJob> {
+        return new Promise((resolve, reject) => {
+            this.client.get(key, (err: Error, jobJson: string) => {
+                if (err !== null) {
+                    throw new Error(`Error saving job ${key}`);
+                }
+
+                // parse JSON and return IJob
+                try {
+                    const jobDict: {[key: string]: any} = JSON.parse(jobJson);
+                    const job: IJob = new Job().fromDict(jobDict);
+                    resolve(job);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
+    }
+
     protected saveJob(job: IJob): Promise<void> {
         return new Promise((resolve, reject) => {
             const jobDict: {[key: string]: any} = job.toDict();
-            const key: string = [this.channel, "job"].join(":");
+            const key: string = [this.channel, "job", job.getId()].join(":");
 
             try {
                 const jobStr: string = JSON.stringify(jobDict);
