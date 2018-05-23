@@ -48,14 +48,6 @@ describe("EnvConfig", () => {
         expect(result.dbPass).toEqual("testPass");
     });
 
-    it("throws error if param wrong type", () => {
-        // arrange
-        process.env.SCHEDULER_DB_NAME = "alphalpha";
-
-        // assert
-        // expect(() => { const result: EnvConfig = new EnvConfig(); }).toThrow();
-    });
-
     afterAll((done) => {
         // restore saved env params
         process.env = origEnv;

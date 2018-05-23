@@ -16,7 +16,7 @@ This is the quick and dirty test, but you'll likely want to clone and change man
 variables.
 
 ```bash
-kubectl apply -f https://github.com/mikesparr/redis-docker-taskrunner/blob/master/deploy/cronjob.yml
+kubectl apply -f https://raw.githubusercontent.com/mikesparr/redis-docker-taskrunner/master/deploy/cronjob.yml
 ```
 
 # Testing
