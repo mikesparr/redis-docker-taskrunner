@@ -15,7 +15,8 @@ describe("RedisTaskRunner", () => {
 
     const testTask: ITask = new Task(TaskType.PubSub, "myChannel", {foo: "bar"});
     const testLastRun: IRun = new Run("run1", 123456789, false);
-    const testIntervalInMinutes: number = 1;
+    const testIntervalInMinutes: number = 10;
+    const testIntervalInMillis: number = testIntervalInMinutes * 60 * 1000;
     const testRecurrences: number = 2;
     const testRunCount: number = 0;
     const testJobScore1: number = Math.floor(Date.now() / 1000) - 90000; // in the past
@@ -84,16 +85,16 @@ describe("RedisTaskRunner", () => {
                 });
         });
 
-        it("skips future tasks from active jobs database", (done) => {
+        it("skips future tasks from 'active' jobs database", (done) => {
             // arrange
             const runner: ITaskRunner = new RedisTaskRunner(config);
 
-            client.zadd(activeJobsKey, testJobScore2, testJobKey, (zaddErr: Error, reply: number) => {
+            client.zadd(activeJobsKey, testJobScore2, testJobKey, (zaddErr: Error, zaddStatus: number) => {
                 if (zaddErr !== null) {
                     done.fail(zaddErr);
                 }
 
-                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, reply: string) => {
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
                     if (setErr !== null) {
                         done.fail(setErr);
                     }
@@ -114,16 +115,16 @@ describe("RedisTaskRunner", () => {
             });
         });
 
-        it("processes pending tasks from active jobs database", (done) => {
+        it("processes pending tasks from 'active' jobs database", (done) => {
             // arrange
             const runner: ITaskRunner = new RedisTaskRunner(config);
 
-            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, reply: number) => {
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
                 if (zaddErr !== null) {
                     done.fail(zaddErr);
                 }
 
-                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, reply: string) => {
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
                     if (setErr !== null) {
                         done.fail(setErr);
                     }
@@ -144,28 +145,193 @@ describe("RedisTaskRunner", () => {
             });
         });
 
-        it("places recurring jobs in active database with new timestamp", (done) => {
-            done();
+        it("places recurring jobs in 'active' database with new timestamp", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1); // not done yet ...
+
+                            // get score of member in active jobs
+                            client.zscore(activeJobsKey, testJobKey, (zscoreErr: Error, score: string) => {
+                                if (zscoreErr !== null) {
+                                    done.fail(zscoreErr);
+                                }
+
+                                // assert
+                                expect(+score).toEqual(testJobScore1 + testIntervalInMillis);
+                                done();
+                            });
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
 
-        it("flags jobs as completed once runCount === recurrences", (done) => {
-            done();
+        xit("flags jobs as 'completed' once runCount === recurrences", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            // assert
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1);
+                            done();
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
 
-        it("schedules repeat jobs with recurrences === 0 indefinitely", (done) => {
-            done();
+        xit("schedules repeat jobs with recurrences === 0 indefinitely", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            // assert
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1);
+                            done();
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
 
-        it("places completed jobs in completed jobs database", (done) => {
-            done();
+        xit("places completed jobs in 'completed' jobs database", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            // assert
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1);
+                            done();
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
 
-        it("places failed jobs in failed jobs database", (done) => {
-            done();
+        xit("places failed jobs in 'failed' jobs database", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            // assert
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1);
+                            done();
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
 
-        it("publishes tasks to defined PubSub channel", (done) => {
-            done();
+        xit("publishes tasks to defined PubSub channel (target)", (done) => {
+            // arrange
+            const runner: ITaskRunner = new RedisTaskRunner(config);
+
+            client.zadd(activeJobsKey, testJobScore1, testJobKey, (zaddErr: Error, zaddStatus: number) => {
+                if (zaddErr !== null) {
+                    done.fail(zaddErr);
+                }
+
+                client.set(testJobKey, JSON.stringify(testJobDict), (setErr: Error, setStatus: string) => {
+                    if (setErr !== null) {
+                        done.fail(setErr);
+                    }
+
+                    // act
+                    runner.run()
+                        .then((report) => {
+                            // assert
+                            expect(report).toBeDefined();
+                            expect(report.getSuccess()).toBeTruthy();
+                            expect(report.getTaskCount()).toEqual(1);
+                            done();
+                        })
+                        .catch((error) => {
+                            done.fail(error);
+                        });
+                });
+            });
         });
-    });
+    }); // run
 });

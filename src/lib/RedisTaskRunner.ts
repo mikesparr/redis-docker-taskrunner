@@ -34,27 +34,29 @@ export default class RedisTaskRunner implements ITaskRunner {
         return new Promise((resolve, reject) => {
             this.getPendingJobs()
                 .then((pendingJobs) => {
+                    const runReport: IReport = new RunReport(
+                        `run-${Date.now()}`, null, 0, Date.now(), true);
 
-                    // if empty, done
-                        // create RunReport
-                        // resolve(RunReport)
-                    // else
-                        // jobs = []
+                    if (pendingJobs.length === 0) {
+                        resolve(runReport);
+                    } else {
+                        const jobs: Array<Promise<void>> = [];
 
-                        // forEach
-                            // jobs.push(this.handleJob(job));
-                        
-                        // Promise.all(jobs)
-                            // create RunReport
-                            // disconnect()
-                            // resolve(RunReport) instead of boolean
-                        // catch
-                            // disconnect()
-                            // reject(error)
-                        
-                    const taskCount: number = pendingJobs.length || 0;
-                    const runReport: IReport = new RunReport("testRun1", "testJob1", taskCount, Date.now(), true);
-                    resolve(runReport);
+                        pendingJobs.map((pendingJob) => {
+                            jobs.push(this.handleJob(pendingJob));
+                        });
+
+                        Promise.all(jobs)
+                            .then((values) => {
+                                runReport.setTaskCount(values.length);
+                                this.disconnect();
+                                resolve(runReport);
+                            })
+                            .catch((error) => {
+                                this.disconnect();
+                                reject(error);
+                            });
+                    }
                 })
                 .catch((error) => {
                     reject(error); // throw up to caller
@@ -91,7 +93,7 @@ export default class RedisTaskRunner implements ITaskRunner {
     }
 
     protected disconnect(): RedisTaskRunner {
-        this.client.end();
+        this.client.end(false);
         return this;
     }
 
@@ -125,21 +127,50 @@ export default class RedisTaskRunner implements ITaskRunner {
 
     protected handleJob(job: IJob): Promise<void> {
         return new Promise((resolve, reject) => {
-            // create new Run
-            // handleTask
-            // increment runCount
+            // handle task (Redis function dynamic based on type [default: publish])
+            const task: ITask = job.getTask();
+            this.client[task.getType()](
+                task.getTarget(),
+                JSON.stringify(task.getContext()),
+                (targetErr: Error, reply: any) => {
+                    if (targetErr !== null) {
+                        throw targetErr;
+                    }
 
-            // lastRun = recurrences > 0 && recurrences === runCount ? true : false;
+                    // save current run
+                    job.setRunCount(job.getRunCount() + 1);
+                    job.setLastRun(new Run(`run-${Date.now()}`, Date.now(), true));
 
-            // if lastRun
-                // removeJob from active list
-                // add to completed list
-            // else
-                // saveJob 
-                // increment with new interval score
-            
-            resolve();
-        });
+                    // check if last run
+                    const repeats: number = job.getRecurrences();
+                    // TODO: move to class (i.e. isLastRun)
+                    const lastRun: boolean = repeats > 0 && repeats === job.getRunCount() ? true : false;
+
+                    if (lastRun) {
+                        this.client.multi()
+                            .zrem(this.getJobsKey("active"), this.getJobKey(job))
+                            .zadd(this.getJobsKey("completed"), this.getJobKey(job))
+                            .exec((err: Error, replies: string[]) => {
+                                if (err !== null) {
+                                    reject(err);
+                                }
+
+                                resolve();
+                            });
+                    } else {
+                        this.client.multi()
+                            .set(this.getJobKey(job), JSON.stringify(job.toDict()))
+                            .zincrby(this.getJobsKey("active"), job.getIntervalInMinutes() * 60000, this.getJobKey(job))
+                            .exec((err: Error, replies: string[]) => {
+                                if (err !== null) {
+                                    reject(err);
+                                }
+
+                                resolve();
+                            });
+                    }
+            }); // task
+        }); // Promise
     }
 
     protected getJob(key: string): Promise<IJob> {
@@ -164,14 +195,14 @@ export default class RedisTaskRunner implements ITaskRunner {
     protected saveJob(job: IJob): Promise<void> {
         return new Promise((resolve, reject) => {
             const jobDict: {[key: string]: any} = job.toDict();
-            const key: string = [this.channel, "job", job.getId()].join(":");
 
             try {
                 const jobStr: string = JSON.stringify(jobDict);
+                const jobKey: string = this.getJobKey(job);
 
-                this.client.set(key, jobStr, (err: Error, reply: string) => {
+                this.client.set(jobKey, jobStr, (err: Error, reply: string) => {
                     if (err !== null) {
-                        throw new Error(`Error saving job ${key}`);
+                        throw new Error(`Error saving job ${jobKey}`);
                     }
                 });
             } catch (error) {
@@ -190,5 +221,17 @@ export default class RedisTaskRunner implements ITaskRunner {
         return new Promise((resolve, reject) => {
             resolve();
         });
+    }
+
+    protected generateJobScore(): number {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    protected getJobsKey(status: string): string {
+        return [this.channel, "jobs", status].join(":"); // TODO: change status to enum
+    }
+
+    protected getJobKey(job: IJob): string {
+        return [this.channel, "job", job.getId()].join(":");
     }
 }
