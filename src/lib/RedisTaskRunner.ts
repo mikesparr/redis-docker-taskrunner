@@ -25,10 +25,30 @@ export default class RedisTaskRunner implements ITaskRunner {
 
     public run(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                console.log("Hello, world");
-                resolve(true);
-            }, 2500);
+            this.getPendingJobs()
+                .then((pendingJobs) => {
+                    console.log({pendingJobs});
+
+                    // if empty, done
+                        // create RunReport
+                        // resolve(RunReport)
+                    // else
+                        // jobs = []
+
+                        // forEach
+                            // jobs.push(this.handleJob(job));
+                        
+                        // Promise.all(jobs)
+                            // create RunReport
+                            // disconnect()
+                            // resolve(RunReport) instead of boolean
+                        // catch
+                            // disconnect()
+                            // reject(error)
+                })
+                .catch((error) => {
+                    reject(error); // throw up to caller
+                });
         });
     }
 
@@ -67,11 +87,70 @@ export default class RedisTaskRunner implements ITaskRunner {
 
     protected getPendingJobs(): Promise<Job[]> {
         return new Promise((resolve, reject) => {
-            resolve([]);
+            const min: number = 0;
+            const max: number = Math.floor(Date.now()/1000);
+            const key: string = [this.channel, "scheduler", "active"].join(":");
+
+            this.client.zrangebyscore(key, min, max, (err: Error, jobs: string[]) => {
+                if (err !== null) {
+                    throw new Error("Error fetching jobs from database");
+                }
+
+                const pendingJobs: Job[] = [];
+
+                jobs.map((jobStr: string) => {
+                    try {
+                        const jobDict: {[key: string]: any} = JSON.parse(jobStr);
+                        pendingJobs.push(new Job().fromDict(jobDict));
+                    } catch(error) {
+                        reject(new Error("Error parsing JSON"));
+                    }
+                });
+
+                resolve(pendingJobs);
+            });
+        });
+    }
+
+    protected handleJob(job: Job): Promise<void> {
+        return new Promise((resolve, reject) => {
+            // create new Run
+            // handleTask
+            // increment runCount
+
+            // lastRun = recurrences > 0 && recurrences === runCount ? true : false;
+
+            // if lastRun
+                // removeJob from active list
+                // add to completed list
+            // else
+                // saveJob 
+                // increment with new interval score
+            
+            resolve();
         });
     }
 
     protected saveJob(job: Job): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const jobDict: {[key: string]: any} = job.toDict();
+            const key: string = [this.channel, "job"].join(":");
+
+            try {
+                const jobStr: string = JSON.stringify(jobDict);
+
+                this.client.set(key, jobStr, (err: Error, reply: string) => {
+                    if (err !== null) {
+                        throw new Error(`Error saving job ${key}`);
+                    }
+                });
+            } catch(error) {
+                reject(new Error("Error converting obj to JSON string"));
+            }
+        });
+    }
+
+    protected removeJob(key: string): Promise<void> {
         return new Promise((resolve, reject) => {
             resolve();
         });

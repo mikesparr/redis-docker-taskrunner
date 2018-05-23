@@ -4,8 +4,8 @@ import { Task, TaskType } from "../Task";
 
 describe("Job", () => {
     const testId: string = "test";
-    const testTask: Task = new Task();
-    const testLastRun: Run = new Run();
+    const testTask: Task = new Task(TaskType.PubSub, "myChannel", {foo: "bar"});
+    const testLastRun: Run = new Run("run1", 123456789, false);
     const testIntervalInMinutes: number = 1;
     const testRecurrences: number = 2;
     const testRunCount: number = 0;
@@ -182,4 +182,70 @@ describe("Job", () => {
             expect(result).toEqual(testRunCount);
         });
     }); // setRunCount
+
+    describe("fromDict", () => {
+        it("deserializes Dictionary into Job class", () => {
+            // arrange
+            const testJob = new Job(
+                testId, 
+                testTask, 
+                testLastRun, 
+                testIntervalInMinutes, 
+                testRecurrences, 
+                testRunCount,
+            );
+
+            const testDict: {[key: string]: any} = {
+                id: testId,
+                task: {
+                    type: testTask.getType(),
+                    target: testTask.getTarget(),
+                    context: testTask.getContext(),
+                },
+                lastRun: testLastRun,
+                intervalInMinutes: testIntervalInMinutes,
+                recurrences: testRecurrences,
+                runCount: testRunCount,
+            };
+
+            // act
+            const result: Job = new Job().fromDict(testDict);
+
+            // assert
+            expect(result).toEqual(testJob);
+        });
+    }); // fromJson
+
+    describe("toDict", () => {
+        it("serializes Job class into Dictionary", () => {
+            // arrange
+            const testJob = new Job(
+                testId, 
+                testTask, 
+                testLastRun, 
+                testIntervalInMinutes, 
+                testRecurrences, 
+                testRunCount,
+            );
+
+            const testDict: {[key: string]: any} = {
+                id: testId,
+                task: {
+                    type: testTask.getType(),
+                    target: testTask.getTarget(),
+                    context: testTask.getContext(),
+                },
+                lastRun: testLastRun,
+                intervalInMinutes: testIntervalInMinutes,
+                recurrences: testRecurrences,
+                runCount: testRunCount,
+            };
+
+            // act
+            const result: {[key: string]: any} = testJob.toDict();
+
+            // assert
+            expect(result).toEqual(testDict);
+        });
+    }); // toJson
 });
