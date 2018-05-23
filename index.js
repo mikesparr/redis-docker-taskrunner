@@ -5,7 +5,7 @@ var RedisTaskRunner_1 = require("./lib/RedisTaskRunner");
 var envConfig = new EnvConfig_1.default();
 var runner = new RedisTaskRunner_1.default(envConfig);
 runner.run()
-    .then(function (success) {
+    .then(function (report) {
     process.exit(0);
 })
     .catch(function (error) {

@@ -6,7 +6,7 @@ const envConfig: EnvConfig = new EnvConfig();
 const runner: ITaskRunner = new RedisTaskRunner(envConfig);
 
 runner.run()
-    .then((success) => {
+    .then((report) => {
         process.exit(0);
     })
     .catch((error) => {

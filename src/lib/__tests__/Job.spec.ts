@@ -1,24 +1,28 @@
+import IJob from "../IJob";
+import IRun from "../IRun";
+import ITask, { TaskType } from "../ITask";
+
 import Job from "../Job";
 import Run from "../Run";
-import { Task, TaskType } from "../Task";
+import Task from "../Task";
 
 describe("Job", () => {
     const testId: string = "test";
-    const testTask: Task = new Task(TaskType.PubSub, "myChannel", {foo: "bar"});
-    const testLastRun: Run = new Run("run1", 123456789, false);
+    const testTask: ITask = new Task(TaskType.PubSub, "myChannel", {foo: "bar"});
+    const testLastRun: IRun = new Run("run1", 123456789, false);
     const testIntervalInMinutes: number = 1;
     const testRecurrences: number = 2;
     const testRunCount: number = 0;
 
     it("instantiates", () => {
-        const result: Job = new Job();
+        const result: IJob = new Job();
         expect(result).toBeInstanceOf(Job);
     });
 
     describe("getId", () => {
         it("gets id", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setId(testId);
 
             // act
@@ -32,7 +36,7 @@ describe("Job", () => {
     describe("setId", () => {
         it("sets id", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setId(testId);
@@ -46,11 +50,11 @@ describe("Job", () => {
     describe("getTask", () => {
         it("gets task", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setTask(testTask);
 
             // act
-            const result: Task = testJob.getTask();
+            const result: ITask = testJob.getTask();
 
             // assert
             expect(result).toEqual(testTask);
@@ -60,11 +64,11 @@ describe("Job", () => {
     describe("setTask", () => {
         it("sets task", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setTask(testTask);
-            const result: Task = testJob.getTask();
+            const result: ITask = testJob.getTask();
 
             // assert
             expect(result).toEqual(testTask);
@@ -74,11 +78,11 @@ describe("Job", () => {
     describe("getLastRun", () => {
         it("gets last run", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setLastRun(testLastRun);
 
             // act
-            const result: Run = testJob.getLastRun();
+            const result: IRun = testJob.getLastRun();
 
             // assert
             expect(result).toEqual(testLastRun);
@@ -88,11 +92,11 @@ describe("Job", () => {
     describe("setLastRun", () => {
         it("sets", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setLastRun(testLastRun);
-            const result: Run = testJob.getLastRun();
+            const result: IRun = testJob.getLastRun();
 
             // assert
             expect(result).toEqual(testLastRun);
@@ -102,7 +106,7 @@ describe("Job", () => {
     describe("getIntervalInMinutes", () => {
         it("gets interval", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setIntervalInMinutes(testIntervalInMinutes);
 
             // act
@@ -116,7 +120,7 @@ describe("Job", () => {
     describe("setIntervalInMinutes", () => {
         it("sets interval", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setIntervalInMinutes(testIntervalInMinutes);
@@ -130,7 +134,7 @@ describe("Job", () => {
     describe("getRecurrences", () => {
         it("gets recurrences", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setRecurrences(testRecurrences);
 
             // act
@@ -144,7 +148,7 @@ describe("Job", () => {
     describe("setRecurrences", () => {
         it("sets recurrences", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setRecurrences(testRecurrences);
@@ -158,7 +162,7 @@ describe("Job", () => {
     describe("getRunCount", () => {
         it("gets run count", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
             testJob.setRunCount(testRunCount);
 
             // act
@@ -172,7 +176,7 @@ describe("Job", () => {
     describe("setRunCount", () => {
         it("sets run count", () => {
             // arrange
-            const testJob: Job = new Job();
+            const testJob: IJob = new Job();
 
             // act
             testJob.setRunCount(testRunCount);
@@ -186,30 +190,30 @@ describe("Job", () => {
     describe("fromDict", () => {
         it("deserializes Dictionary into Job class", () => {
             // arrange
-            const testJob = new Job(
-                testId, 
-                testTask, 
-                testLastRun, 
-                testIntervalInMinutes, 
-                testRecurrences, 
+            const testJob: IJob = new Job(
+                testId,
+                testTask,
+                testLastRun,
+                testIntervalInMinutes,
+                testRecurrences,
                 testRunCount,
             );
 
             const testDict: {[key: string]: any} = {
                 id: testId,
-                task: {
-                    type: testTask.getType(),
-                    target: testTask.getTarget(),
-                    context: testTask.getContext(),
-                },
-                lastRun: testLastRun,
                 intervalInMinutes: testIntervalInMinutes,
+                lastRun: testLastRun,
                 recurrences: testRecurrences,
                 runCount: testRunCount,
+                task: {
+                    context: testTask.getContext(),
+                    target: testTask.getTarget(),
+                    type: testTask.getType(),
+                },
             };
 
             // act
-            const result: Job = new Job().fromDict(testDict);
+            const result: IJob = new Job().fromDict(testDict);
 
             // assert
             expect(result).toEqual(testJob);
@@ -219,26 +223,26 @@ describe("Job", () => {
     describe("toDict", () => {
         it("serializes Job class into Dictionary", () => {
             // arrange
-            const testJob = new Job(
-                testId, 
-                testTask, 
-                testLastRun, 
-                testIntervalInMinutes, 
-                testRecurrences, 
+            const testJob: IJob = new Job(
+                testId,
+                testTask,
+                testLastRun,
+                testIntervalInMinutes,
+                testRecurrences,
                 testRunCount,
             );
 
             const testDict: {[key: string]: any} = {
                 id: testId,
-                task: {
-                    type: testTask.getType(),
-                    target: testTask.getTarget(),
-                    context: testTask.getContext(),
-                },
-                lastRun: testLastRun,
                 intervalInMinutes: testIntervalInMinutes,
+                lastRun: testLastRun,
                 recurrences: testRecurrences,
                 runCount: testRunCount,
+                task: {
+                    context: testTask.getContext(),
+                    target: testTask.getTarget(),
+                    type: testTask.getType(),
+                },
             };
 
             // act

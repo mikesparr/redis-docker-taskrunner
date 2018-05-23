@@ -1,9 +1,6 @@
+import ITask, { TaskType } from "./ITask";
 
-export enum TaskType {
-    PubSub = "publish",
-}
-
-export class Task {
+export default class Task implements ITask {
     protected type: TaskType;
     protected target: string;
     protected context: {[key: string]: any};

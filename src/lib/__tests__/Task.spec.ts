@@ -1,4 +1,5 @@
-import { Task, TaskType } from "../Task";
+import ITask, { TaskType } from "../ITask";
+import Task from "../Task";
 
 describe("Task", () => {
     const testType: TaskType = TaskType.PubSub;
@@ -6,14 +7,14 @@ describe("Task", () => {
     const testContext: {[key: string]: any} = {foo: "bar"};
 
     it("instantiates", () => {
-        const result: Task = new Task();
+        const result: ITask = new Task();
         expect(result).toBeInstanceOf(Task);
     });
 
     describe("getType", () => {
         it("gets type", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
             testTask.setType(testType);
 
             // act
@@ -27,7 +28,7 @@ describe("Task", () => {
     describe("setType", () => {
         it("sets type", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
 
             // act
             testTask.setType(testType);
@@ -41,7 +42,7 @@ describe("Task", () => {
     describe("getTarget", () => {
         it("gets target", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
             testTask.setTarget(testTarget);
 
             // act
@@ -55,7 +56,7 @@ describe("Task", () => {
     describe("setTarget", () => {
         it("sets target", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
 
             // act
             testTask.setTarget(testTarget);
@@ -69,7 +70,7 @@ describe("Task", () => {
     describe("getContext", () => {
         it("gets context", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
             testTask.setContext(testContext);
 
             // act
@@ -83,7 +84,7 @@ describe("Task", () => {
     describe("setContext", () => {
         it("sets timestamp", () => {
             // arrange
-            const testTask: Task = new Task();
+            const testTask: ITask = new Task();
 
             // act
             testTask.setContext(testContext);

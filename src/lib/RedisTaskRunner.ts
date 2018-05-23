@@ -1,11 +1,17 @@
 import * as redis from "redis";
 
 import EnvConfig from "./EnvConfig";
+
+import IJob from "./IJob";
+import IReport from "./IReport";
+import IRun from "./IRun";
+import ITask, { TaskType } from "./ITask";
 import ITaskRunner from "./ITaskRunner";
+
 import Job from "./Job";
 import RedisConfig from "./RedisConfig";
 import Run from "./Run";
-import { Task, TaskType } from "./Task";
+import Task from "./Task";
 
 export default class RedisTaskRunner implements ITaskRunner {
     protected client: redis.RedisClient;
@@ -18,12 +24,12 @@ export default class RedisTaskRunner implements ITaskRunner {
 
         try {
             this.connect(this.config);
-        } catch(error) {
+        } catch (error) {
             throw new Error("Could not connect to database");
         }
     }
 
-    public run(): Promise<boolean> {
+    public run(): Promise<IReport> {
         return new Promise((resolve, reject) => {
             this.getPendingJobs()
                 .then((pendingJobs) => {
@@ -85,10 +91,10 @@ export default class RedisTaskRunner implements ITaskRunner {
         return this;
     }
 
-    protected getPendingJobs(): Promise<Job[]> {
+    protected getPendingJobs(): Promise<IJob[]> {
         return new Promise((resolve, reject) => {
             const min: number = 0;
-            const max: number = Math.floor(Date.now()/1000);
+            const max: number = Math.floor(Date.now() / 1000);
             const key: string = [this.channel, "scheduler", "active"].join(":");
 
             this.client.zrangebyscore(key, min, max, (err: Error, jobs: string[]) => {
@@ -96,13 +102,13 @@ export default class RedisTaskRunner implements ITaskRunner {
                     throw new Error("Error fetching jobs from database");
                 }
 
-                const pendingJobs: Job[] = [];
+                const pendingJobs: IJob[] = [];
 
                 jobs.map((jobStr: string) => {
                     try {
                         const jobDict: {[key: string]: any} = JSON.parse(jobStr);
                         pendingJobs.push(new Job().fromDict(jobDict));
-                    } catch(error) {
+                    } catch (error) {
                         reject(new Error("Error parsing JSON"));
                     }
                 });
@@ -112,7 +118,7 @@ export default class RedisTaskRunner implements ITaskRunner {
         });
     }
 
-    protected handleJob(job: Job): Promise<void> {
+    protected handleJob(job: IJob): Promise<void> {
         return new Promise((resolve, reject) => {
             // create new Run
             // handleTask
@@ -131,7 +137,7 @@ export default class RedisTaskRunner implements ITaskRunner {
         });
     }
 
-    protected saveJob(job: Job): Promise<void> {
+    protected saveJob(job: IJob): Promise<void> {
         return new Promise((resolve, reject) => {
             const jobDict: {[key: string]: any} = job.toDict();
             const key: string = [this.channel, "job"].join(":");
@@ -144,7 +150,7 @@ export default class RedisTaskRunner implements ITaskRunner {
                         throw new Error(`Error saving job ${key}`);
                     }
                 });
-            } catch(error) {
+            } catch (error) {
                 reject(new Error("Error converting obj to JSON string"));
             }
         });
@@ -156,7 +162,7 @@ export default class RedisTaskRunner implements ITaskRunner {
         });
     }
 
-    protected handleTask(task: Task): Promise<Run> {
+    protected handleTask(task: ITask): Promise<IRun> {
         return new Promise((resolve, reject) => {
             resolve();
         });

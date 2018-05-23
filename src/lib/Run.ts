@@ -1,4 +1,6 @@
-export default class Run {
+import IRun from "./IRun";
+
+export default class Run implements IRun {
     protected id: string;
     protected timestamp: number;
     protected success: boolean;

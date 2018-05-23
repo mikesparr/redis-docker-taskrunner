@@ -1,8 +1,6 @@
-// import Job
-import RedisConfig from "./RedisConfig";
-// import Run
-// import Task
+
+import IReport from "./IReport";
 
 export default interface ITaskRunner {
-    run(): Promise<boolean>;
+    run(): Promise<IReport>;
 }

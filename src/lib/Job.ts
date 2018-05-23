@@ -1,20 +1,25 @@
-import Run from "./Run";
-import { Task, TaskType } from "./Task";
+import IJob from "./IJob";
+import IRun from "./IRun";
+import ITask from "./ITask";
 
-export default class Job {
+import { TaskType } from "./ITask";
+import Run from "./Run";
+import Task from "./Task";
+
+export default class Job implements IJob {
     protected id: string;
-    protected task: Task;
-    protected lastRun: Run;
+    protected task: ITask;
+    protected lastRun: IRun;
     protected interval: number;
     protected recurrences: number;
     protected runCount: number;
 
     constructor(
-        id?: string, 
-        task?: Task, 
-        lastRun?: Run, 
-        intervalInMinutes?: number, 
-        recurrences?: number, 
+        id?: string,
+        task?: ITask,
+        lastRun?: IRun,
+        intervalInMinutes?: number,
+        recurrences?: number,
         runCount?: number) {
             this.id = id;
             this.task = task;
@@ -30,25 +35,25 @@ export default class Job {
         return this.id;
     }
 
-    public setId(id: string): Job {
+    public setId(id: string): IJob {
         this.id = id;
         return this;
     }
 
-    public getTask(): Task {
+    public getTask(): ITask {
         return this.task;
     }
 
-    public setTask(task: Task): Job {
+    public setTask(task: ITask): IJob {
         this.task = task;
         return this;
     }
 
-    public getLastRun(): Run {
+    public getLastRun(): IRun {
         return this.lastRun;
     }
 
-    public setLastRun(lastRun: Run): Job {
+    public setLastRun(lastRun: Run): IJob {
         this.lastRun = lastRun;
         return this;
     }
@@ -57,7 +62,7 @@ export default class Job {
         return this.interval;
     }
 
-    public setIntervalInMinutes(interval: number): Job {
+    public setIntervalInMinutes(interval: number): IJob {
         this.interval = interval;
         return this;
     }
@@ -66,7 +71,7 @@ export default class Job {
         return this.recurrences;
     }
 
-    public setRecurrences(recurrences: number): Job {
+    public setRecurrences(recurrences: number): IJob {
         this.recurrences = recurrences;
         return this;
     }
@@ -75,19 +80,19 @@ export default class Job {
         return this.runCount;
     }
 
-    public setRunCount(count: number): Job {
+    public setRunCount(count: number): IJob {
         this.runCount = count;
         return this;
     }
 
-    public fromDict(obj: {[key: string]: any}): Job {
-        const newRun: Run = new Run(
+    public fromDict(obj: {[key: string]: any}): IJob {
+        const newRun: IRun = new Run(
             obj.lastRun.id,
             obj.lastRun.timestamp,
             obj.lastRun.success,
         );
 
-        const newTask: Task = new Task(
+        const newTask: ITask = new Task(
             TaskType.PubSub,
             obj.task.target,
             obj.task.context,
@@ -106,20 +111,20 @@ export default class Job {
     public toDict(): {[key: string]: any} {
         const obj: {[key: string]: any} = {
             id: this.id,
-            task: {
-                type: this.task.getType(),
-                target: this.task.getTarget(),
-                context: this.task.getContext(),
-            },
+            intervalInMinutes: this.interval,
             lastRun: {
                 id: this.lastRun.getId(),
-                timestamp: this.lastRun.getTimestamp(),
                 success: this.lastRun.getSuccess(),
+                timestamp: this.lastRun.getTimestamp(),
             },
-            intervalInMinutes: this.interval,
             recurrences: this.recurrences,
             runCount: this.runCount,
-        }
+            task: {
+                context: this.task.getContext(),
+                target: this.task.getTarget(),
+                type: this.task.getType(),
+            },
+        };
 
         return obj;
     }
