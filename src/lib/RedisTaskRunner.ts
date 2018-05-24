@@ -1,18 +1,21 @@
 import * as redis from "redis";
 
+import {
+    IJob,
+    IRun,
+    ITask,
+    Job,
+    Run,
+    Task,
+    TaskType,
+} from "redis-task-scheduler";
+
 import EnvConfig from "./EnvConfig";
-
-import IJob from "./IJob";
 import IReport from "./IReport";
-import IRun from "./IRun";
-import ITask, { TaskType } from "./ITask";
 import ITaskRunner from "./ITaskRunner";
-
-import Job from "./Job";
 import RedisConfig from "./RedisConfig";
-import Run from "./Run";
 import RunReport from "./RunReport";
-import Task from "./Task";
+
 
 enum JobStatus {
     Active = "active",

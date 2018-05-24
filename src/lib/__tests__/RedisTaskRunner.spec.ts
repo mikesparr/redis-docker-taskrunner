@@ -1,13 +1,20 @@
 import * as redis from "redis";
 
+import {
+    IJob,
+    IRun,
+    ITask,
+    Job,
+    Run,
+    Task,
+    TaskType,
+} from "redis-task-scheduler";
+
 import EnvConfig from "../EnvConfig";
 import IReport from "../IReport";
-import IRun from "../IRun";
-import ITask, { TaskType } from "../ITask";
 import ITaskRunner from "../ITaskRunner";
 import RedisTaskRunner from "../RedisTaskRunner";
-import Run from "../Run";
-import Task from "../Task";
+
 
 describe("RedisTaskRunner", () => {
     const config: EnvConfig = new EnvConfig();

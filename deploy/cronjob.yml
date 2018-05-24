@@ -10,14 +10,14 @@ spec:
         spec:
           containers:
           - name: task-runner
-            image: mikesparr/redis-docker-taskrunner
+            image: mikesparr/redis-docker-taskrunner:latest
             env:
               - name: SCHEDULER_NAME
                 value: scheduler1
               - name: SCHEDULER_CHANNEL
                 value: scheduler
               - name: SCHEDULER_DB_HOST
-                value: localhost
+                value: redis.default.svc.cluster.local
               - name: SCHEDULER_DB_PORT
                 value: "6379"
 #              - name: SCHEDULER_DB_NAME
