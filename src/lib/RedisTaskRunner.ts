@@ -149,8 +149,8 @@ export default class RedisTaskRunner implements ITaskRunner {
                     if (lastRun) {
                         this.client.multi()
                             .zrem(this.getJobsKey("active"), this.getJobKey(job))
-                            .zadd(this.getJobsKey("completed"), this.getJobKey(job))
-                            .exec((err: Error, replies: string[]) => {
+                            .zadd(this.getJobsKey("completed"), this.generateJobScore(), this.getJobKey(job))
+                            .exec((err: Error, replies: string[]) => { // TODO: save job too
                                 if (err !== null) {
                                     reject(err);
                                 }
@@ -213,13 +213,17 @@ export default class RedisTaskRunner implements ITaskRunner {
 
     protected removeJob(key: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            resolve();
-        });
-    }
+            try {
+                this.client.del(key, (err: Error, reply: number) => {
+                    if (err !== null) {
+                        throw new Error(`Error removing job ${key}`);
+                    }
 
-    protected handleTask(task: ITask): Promise<IRun> {
-        return new Promise((resolve, reject) => {
-            resolve();
+                    resolve();
+                });
+            } catch (error) {
+                reject(new Error("Error converting obj to JSON string"));
+            }
         });
     }
 
