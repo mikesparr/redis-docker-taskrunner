@@ -14,10 +14,19 @@ import Run from "./Run";
 import RunReport from "./RunReport";
 import Task from "./Task";
 
+enum JobStatus {
+    Active = "active",
+    Completed = "completed",
+    Failed = "failed",
+}
+
 export default class RedisTaskRunner implements ITaskRunner {
     protected client: redis.RedisClient;
     protected config: RedisConfig;
     protected channel: string;
+
+    protected readonly REDIS_JOBS_TYPE: string = "jobs";
+    protected readonly REDIS_JOB_TYPE: string = "job";
 
     constructor(env: EnvConfig) {
         this.config = new RedisConfig(env.dbHost, env.dbPort, env.dbName, env.dbPass);
@@ -101,7 +110,7 @@ export default class RedisTaskRunner implements ITaskRunner {
         return new Promise((resolve, reject) => {
             const min: number = 0;
             const max: number = Math.floor(Date.now() / 1000);
-            const key: string = [this.channel, "jobs", "active"].join(":");
+            const key: string = this.getJobsKey(JobStatus.Active);
 
             this.client.zrangebyscore(key, min, max, (err: Error, jobKeys: string[]) => {
                 if (err !== null) {
@@ -148,8 +157,8 @@ export default class RedisTaskRunner implements ITaskRunner {
 
                     if (lastRun) {
                         this.client.multi()
-                            .zrem(this.getJobsKey("active"), this.getJobKey(job))
-                            .zadd(this.getJobsKey("completed"), this.generateJobScore(), this.getJobKey(job))
+                            .zrem(this.getJobsKey(JobStatus.Active), this.getJobKey(job))
+                            .zadd(this.getJobsKey(JobStatus.Completed), this.generateJobScore(), this.getJobKey(job))
                             .exec((err: Error, replies: string[]) => { // TODO: save job too
                                 if (err !== null) {
                                     reject(err);
@@ -158,9 +167,10 @@ export default class RedisTaskRunner implements ITaskRunner {
                                 resolve();
                             });
                     } else {
+                        const nextRun: number = job.getIntervalInMinutes() * 60000;
                         this.client.multi()
                             .set(this.getJobKey(job), JSON.stringify(job.toDict()))
-                            .zincrby(this.getJobsKey("active"), job.getIntervalInMinutes() * 60000, this.getJobKey(job))
+                            .zincrby(this.getJobsKey(JobStatus.Active), nextRun, this.getJobKey(job))
                             .exec((err: Error, replies: string[]) => {
                                 if (err !== null) {
                                     reject(err);
@@ -232,10 +242,10 @@ export default class RedisTaskRunner implements ITaskRunner {
     }
 
     protected getJobsKey(status: string): string {
-        return [this.channel, "jobs", status].join(":"); // TODO: change status to enum
+        return [this.channel, this.REDIS_JOBS_TYPE, status].join(":"); // TODO: change status to enum
     }
 
     protected getJobKey(job: IJob): string {
-        return [this.channel, "job", job.getId()].join(":");
+        return [this.channel, this.REDIS_JOB_TYPE, job.getId()].join(":");
     }
 }
