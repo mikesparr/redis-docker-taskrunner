@@ -19,6 +19,13 @@ variables.
 kubectl apply -f https://raw.githubusercontent.com/mikesparr/redis-docker-taskrunner/master/deploy/cronjob.yml
 ```
 
+## Publishing jobs
+See the tests for data format to publish to Redis. However a convenience npm module exists called `redis-task-scheduler` 
+that you can use. Simply `npm install redis-task-scheduler` (or `yarn add redis-task-scheduler`) and follow it's instructions. 
+Both these components were designed to work as optional handler for `Delayed` actions in npm module `redis-workflow`. The 
+default action for tasks is to republish the context object to Redis PubSub when scheduled time arrives for workflow to process 
+it. 
+
 ## Customizing
 This app can be run locally, on any server (likely Linux environment using cron but also Windows with scheduler). 
 It is designed to run in Kubernetes using `CronJob`, but you could deploy it anywhere and create your own cron 
