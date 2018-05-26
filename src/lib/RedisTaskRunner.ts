@@ -16,7 +16,6 @@ import ITaskRunner from "./ITaskRunner";
 import RedisConfig from "./RedisConfig";
 import RunReport from "./RunReport";
 
-
 enum JobStatus {
     Active = "active",
     Completed = "completed",
