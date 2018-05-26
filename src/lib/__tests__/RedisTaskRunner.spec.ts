@@ -15,7 +15,6 @@ import IReport from "../IReport";
 import ITaskRunner from "../ITaskRunner";
 import RedisTaskRunner from "../RedisTaskRunner";
 
-
 describe("RedisTaskRunner", () => {
     const config: EnvConfig = new EnvConfig();
     const client: redis.RedisClient = redis.createClient();
@@ -277,6 +276,7 @@ describe("RedisTaskRunner", () => {
             });
         });
 
+        // TODO: consider failed jobs storage
         xit("places failed jobs in 'failed' jobs database", (done) => {
             // arrange
             const runner: ITaskRunner = new RedisTaskRunner(config);

@@ -19,6 +19,46 @@ variables.
 kubectl apply -f https://raw.githubusercontent.com/mikesparr/redis-docker-taskrunner/master/deploy/cronjob.yml
 ```
 
+## Customizing
+This app can be run locally, on any server (likely Linux environment using cron but also Windows with scheduler). 
+It is designed to run in Kubernetes using `CronJob`, but you could deploy it anywhere and create your own cron 
+to `*/1 * * * *  /usr/local/bin/node /path/to/app/index.js` for example.
+
+### Clone repo and install dependencies locally
+```bash
+git clone git@github.com:mikesparr/redis-docker-taskrunner.git
+cd redis-docker-taskrunner
+npm install
+```
+
+### Edit files to your liking
+1. Create a `.env` file and customize:
+```bash
+# default env vars for scheduler app
+export SCHEDULER_NAME="Default"
+export SCHEDULER_CHANNEL="scheduler"
+export SCHEDULER_DB_HOST="localhost"
+export SCHEDULER_DB_PORT="6379"
+#export SCHEDULER_DB_NAME=
+#export SCHEDULER_DB_PASS=
+```
+
+2. Create your own Docker image and publish to container registry
+```bash
+docker build -t yourrepo/redis-docker-taskrunner:latest .
+docker push yourrepo/redis-docker-taskrunner:latest # assume you logged into your account
+```
+
+3. Edit the params in `/deploy/cronjob.yml` for your Kubernetes environment
+ * edit the `image` to point to `yourrepo/redis-docker-taskrunner:latest`
+ * edit the `env` params to point to your instance of Redis
+
+4. Deploy cronjob to Kubernetes
+```bash
+kubectl delete -f deploy/cronjob.yml # if you had prior version running
+kubectl apply -f deploy/cronjob.yml
+```
+
 # Testing
 ```bash
 git clone git@github.com:mikesparr/redis-docker-taskrunner.git

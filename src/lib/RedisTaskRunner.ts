@@ -150,7 +150,7 @@ export default class RedisTaskRunner implements ITaskRunner {
 
                     // save current run
                     job.setRunCount(job.getRunCount() + 1);
-                    job.setLastRun(new Run(`run-${Date.now()}`, Date.now(), true));
+                    job.setLastRun(new Run(this.generateRunId(), Date.now(), true));
 
                     // check if last run
                     const repeats: number = job.getRecurrences();
@@ -241,6 +241,10 @@ export default class RedisTaskRunner implements ITaskRunner {
 
     protected generateJobScore(): number {
         return Math.floor(Date.now() / 1000);
+    }
+
+    protected generateRunId(): string {
+        return `run-${Date.now()}`;
     }
 
     protected getJobsKey(status: string): string {

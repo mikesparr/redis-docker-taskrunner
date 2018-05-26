@@ -1,6 +1,6 @@
 {
   "name": "redis-docker-taskrunner",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Simple task runner that runs pending tasks in Redis when Docker container starts",
   "main": "index.js",
   "scripts": {
